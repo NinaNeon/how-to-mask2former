@@ -38,4 +38,8 @@ python demo/demo.py \
   --output demo_inputs/output_panoptic_gpu.png \
   --opts \
     MODEL.DEVICE cuda \
-    MODEL.WEIGHTS https://dl.fbaipublicfiles.com/maskformer/mask2former/coco/panoptic/maskformer2_swin_large_IN21k_384_bs16_100ep/model_final_f07440.pkl
+    MODEL.WEIGHTS https://dl.fbaipublicfiles.com/maskformer/mask2former/coco/panoptic/maskformer2_swin_large_IN21k_384_bs16_100ep/model_final_f07440.pkl\
+cp ~/Mask2Former/demo_inputs/output_panoptic_gpu.png /mnt/c/Users/USER/Desktop/output_panoptic_gpu.png
+
+    <img width="942" height="537" alt="image" src="https://github.com/user-attachments/assets/9115dfdc-2c04-44f7-8c5b-b48472b8ce16" />
+
