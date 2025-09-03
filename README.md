@@ -190,3 +190,59 @@ except Exception:
 ```
 
 但以你現在的 `WideResNetFPNWithUNet` 來看，**改成 p2–p5**是最自然、侵入最小的解法。
+
+抱歉，剛剛一堆補丁把檔案弄亂，讓你超煩。我把重點收斂成**一個精準修正**：你的骨幹是 **FPN**（輸出 `p2~p5`），但腳本把 head 設成吃 `res2~res5`，所以一直 `KeyError: 'res5'`。把所有 `SEM_SEG_HEAD.IN_FEATURES`（以及 `PIXEL_DECODER.IN_FEATURES`）強制改為 `["p2","p3","p4","p5"]` 就好。
+
+直接貼這些指令跑：
+
+```bash
+cd /mnt/c/Users/USER/Desktop
+
+# 1) 把 SEM_SEG_HEAD.IN_FEATURES 從 res2..res5 改成 p2..p5
+sed -i -E 's/(cfg\.MODEL\.SEM_SEG_HEAD\.IN_FEATURES\s*=\s*)\["res2", "res3", "res4", "res5"\]/\1["p2", "p3", "p4", "p5"]/' script.py
+
+# 2) 若附近沒有幫 PIXEL_DECODER 設定，補上（自動插在 SEM_SEG_HEAD 那行後面）
+python - <<'PY'
+import re
+p="script.py"
+txt=open(p,"r",encoding="utf-8").read().splitlines()
+for i,l in enumerate(txt):
+    if re.search(r'cfg\.MODEL\.SEM_SEG_HEAD\.IN_FEATURES\s*=', l):
+        indent = l[:len(l)-len(l.lstrip())]
+        have=False
+        for j in range(i+1, min(i+6,len(txt))):
+            if 'PIXEL_DECODER.IN_FEATURES' in txt[j]:
+                have=True; break
+        if not have:
+            txt[i+1:i+1] = [
+                indent+'try:',
+                indent+'    cfg.MODEL.PIXEL_DECODER.IN_FEATURES = ["p2", "p3", "p4", "p5"]',
+                indent+'except Exception:',
+                indent+'    pass',
+            ]
+        break
+open(p,"w",encoding="utf-8").write("\n".join(txt)+"\n")
+print("✅ set PIXEL_DECODER.IN_FEATURES to p2..p5 (if missing)")
+PY
+
+# 3) 確認現在只剩 p2..p5（不該再看到 res2..res5）
+grep -n "SEM_SEG_HEAD.IN_FEATURES" script.py
+grep -n "PIXEL_DECODER.IN_FEATURES" script.py
+
+# 4) 先短跑 20 iter（避免一次長訓）
+sed -i -E 's/(cfg\.SOLVER\.MAX_ITER\s*=\s*)[0-9]+/\1 20/' script.py
+sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)[0-9]+/\1 2/'  script.py
+
+python script.py --mode train --use-unet
+```
+
+**預期結果**：不再出現 `'res5'`。如果還看到 `res5`，代表腳本裡**別的地方又把它覆寫回 res**\*，再跑這個查所有殘留並貼給我（我幫你一次剷除）：
+
+```bash
+grep -nE 'IN_FEATURES.*res[2345]' -n script.py || echo "OK: no res* left"
+```
+
+> 註：`cfg.MODEL.FPN.IN_FEATURES = ["res2","res3","res4","res5"]` 那行**可以保留**（那是告訴 FPN 從 ResNet 哪些 stage 取特徵來產生 `p2~p5`），真正要餵給 Mask2Former 的 head/decoder 才是 `p2~p5`。
+
+等短跑 ok 之後，再把 iter / batch 改回你要的正式值。需要的話我也可以幫你加一個 CLI 參數 `--features p|res`，之後切換骨幹和特徵名稱不用再改檔。
+
