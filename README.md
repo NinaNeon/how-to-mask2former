@@ -98,3 +98,95 @@ sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)2/\1 4/'  /mnt/c/Users/USER/Desk
 
 
 
+你現在的錯誤又回到 `KeyError: 'res5'`——意思是**骨幹輸出是 FPN（p2–p5），但 head/decoder 仍在吃 res2–res5**。最小風險的修法：只在 `cfg.merge_from_file(...)` 後面加幾行覆寫，把特徵名強制改成 `["p2","p3","p4","p5"]`（同時順手允許未知鍵，避免之前的 `STEM_TYPE` 類似報錯）。下面的補丁是「精準插入 + 自動偵測縮排」，不會破壞函式結構。
+
+**照貼跑：**
+
+```bash
+cd /mnt/c/Users/USER/Desktop
+
+# 安全補丁：在 add_maskformer2_config 後插入 set_new_allowed(True)；
+# 在 merge_from_file 後插入 IN_FEATURES 覆寫為 p2~p5
+python - <<'PY'
+import time
+p="script.py"
+s=open(p,"r",encoding="utf-8").read()
+open(f"script.py.bak.{int(time.time())}","w",encoding="utf-8").write(s)  # 備份
+
+lines=s.splitlines()
+def insert_after(substr, new_lines):
+    for i,l in enumerate(lines):
+        if substr in l:
+            indent = l[:len(l)-len(l.lstrip())]
+            for k,x in enumerate(new_lines):
+                lines.insert(i+1+k, indent + x)
+            return True
+    return False
+
+changed=False
+
+# A) 允許未知鍵（防 STEM_TYPE 之類）
+if "cfg.set_new_allowed(True)" not in s:
+    if insert_after("add_maskformer2_config(cfg)", ["cfg.set_new_allowed(True)  # allow non-registered keys"]):
+        changed=True
+
+# B) 強制用 p2~p5（解 'res5'）
+if 'SEM_SEG_HEAD.IN_FEATURES' not in s:
+    if insert_after("cfg.merge_from_file", [
+        '# force FPN features to p2..p5 to avoid KeyError: res5',
+        'cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["p2","p3","p4","p5"]',
+        'try:',
+        '    cfg.MODEL.PIXEL_DECODER.IN_FEATURES = ["p2","p3","p4","p5"]',
+        'except Exception:',
+        '    pass',
+    ]):
+        changed=True
+
+if changed:
+    open(p,"w",encoding="utf-8").write("\n".join(lines)+"\n")
+    print("✅ Patch applied.")
+else:
+    print("ℹ️ Nothing to patch (maybe already applied).")
+PY
+```
+
+**確認有插入到：**
+
+```bash
+grep -n "set_new_allowed" script.py
+grep -n "IN_FEATURES" script.py
+```
+
+**先做 20 iter 煙霧測試（避免一次長訓）：**
+
+```bash
+sed -i -E 's/(cfg\.SOLVER\.MAX_ITER\s*=\s*)[0-9]+/\1 20/' script.py
+sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)[0-9]+/\1 2/'  script.py
+
+python script.py --mode train --use-unet
+```
+
+> 這一步應該不會再看到 `'res5'`。若還有，我再給你「把 backbone 也硬指定為 FPN 並覆寫 IN\_FEATURES」的第二層保險。
+
+**一切 OK 後**再把參數改回來跑正式訓練：
+
+```bash
+sed -i -E 's/(cfg\.SOLVER\.MAX_ITER\s*=\s*)20/\1 8000/' script.py
+sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)2/\1 4/'  script.py
+```
+
+---
+
+如果你想直接改「不用 FPN、回到 res2–res5」也可以，在 `cfg.merge_from_file(...)` 後面額外塞這幾行（擇一方案，不要同時用）：
+
+```python
+# 用 ResNet 主幹 + res2~res5（而非 FPN）
+cfg.MODEL.BACKBONE.NAME = "build_resnet_backbone"
+cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res2","res3","res4","res5"]
+try:
+    cfg.MODEL.PIXEL_DECODER.IN_FEATURES = ["res2","res3","res4","res5"]
+except Exception:
+    pass
+```
+
+但以你現在的 `WideResNetFPNWithUNet` 來看，**改成 p2–p5**是最自然、侵入最小的解法。
