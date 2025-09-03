@@ -42,3 +42,16 @@ python demo/demo.py \
 cp ~/Mask2Former/demo_inputs/output_panoptic_gpu.png /mnt/c/Users/USER/Desktop/output_panoptic_gpu.png
 <img width="942" height="537" alt="螢幕擷取畫面 2025-09-03 152404" src="https://github.com/user-attachments/assets/abebd819-c5d2-4a24-89be-97bc60fed4e2" />
 
+
+
+# 基本训练（Wide ResNet-50）
+python script.py --mode train
+
+# 使用 UNet 增强
+python script.py --mode train --use-unet
+
+# 评估模型
+python script.py --mode eval --model-path ./segmentation_output_*/model_final.pth
+
+# 可视化结果
+python script.py --mode viz --model-path ./segmentation_output_*/model_final.pth
