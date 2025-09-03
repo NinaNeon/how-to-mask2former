@@ -29,3 +29,4 @@ python demo/demo.py \
   --input demo_inputs/input.jpg \
   --output demo_inputs/output_panoptic_gpu.png \
   --opts MODEL.DEVICE cuda
+cp ~/Mask2Former/demo_inputs/output_panoptic_gpu.png /mnt/c/Users/USER/Desktop/output_panoptic_gpu.png
