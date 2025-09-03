@@ -55,3 +55,46 @@ python script.py --mode eval --model-path ./segmentation_output_*/model_final.pt
 
 # 可视化结果
 python script.py --mode viz --model-path ./segmentation_output_*/model_final.pth
+
+
+
+
+# 3) 先做 20 iter「煙霧測試」
+
+確保資料讀得到、能跑完整訓練 loop，之後再回到正式參數。
+
+```bash
+# 把 iter/batch 暫時調小（如果你的腳本裡這兩行存在）
+sed -i -E 's/(cfg\.SOLVER\.MAX_ITER\s*=\s*)[0-9]+/\1 20/' /mnt/c/Users/USER/Desktop/script.py
+sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)[0-9]+/\1 2/'  /mnt/c/Users/USER/Desktop/script.py
+
+cd /mnt/c/Users/USER/Desktop
+# 用你剛剛能建起來的路徑先跑（--use-unet 成功率最高）
+python script.py --mode train --use-unet
+```
+
+完成後目錄會出現 `segmentation_output_.../`，裡面應該有權重檔（名稱依你的程式而定）。接著：
+
+```bash
+LATEST=$(ls -dt segmentation_output_* | head -n 1)
+echo "LATEST = $LATEST"
+ls -lh "$LATEST"
+
+# 如果有 model_final.pth 就帶它；若叫別的檔名，改成那個實名
+python script.py --mode eval --model-path "$LATEST/model_final.pth"
+python script.py --mode viz  --model-path "$LATEST/model_final.pth"
+```
+
+> **eval/viz 找不到模型** 的主因就是訓練沒有產生模型檔（或路徑沒展開），按上面取 `LATEST` 的做法就能避開萬用字元無法展開的問題。
+
+---
+
+# 4) 正式訓練前，把參數改回去
+
+```bash
+sed -i -E 's/(cfg\.SOLVER\.MAX_ITER\s*=\s*)20/\1 8000/' /mnt/c/Users/USER/Desktop/script.py
+sed -i -E 's/(cfg\.SOLVER\.IMS_PER_BATCH\s*=\s*)2/\1 4/'  /mnt/c/Users/USER/Desktop/script.py
+```
+
+
+
