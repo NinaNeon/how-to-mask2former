@@ -47,6 +47,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 
 
+pip install opencv-python
 
 
 
