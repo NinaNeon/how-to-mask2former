@@ -40,6 +40,10 @@ Sat Sep  6 13:30:07 2025
 
 
 
+# 建議別在 base，先建乾淨環境（可選）
+# python -m venv ~/venvs/torch121 && source ~/venvs/torch121/bin/activate
+
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 
 
