@@ -47,6 +47,12 @@ python demo/demo.py --config-file configs/coco/panoptic-segmentation/swin/maskfo
 
 
 # 基本训练（Wide ResNet-50）
+
+conda activate mask2former
+cd ~/Mask2Former
+python /mnt/c/Users/USER/Desktop/mask2former_training.py --mode train --use-unet
+
+
 python script.py --mode train
 
 # 使用 UNet 增强
