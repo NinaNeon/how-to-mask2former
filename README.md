@@ -50,6 +50,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install opencv-python
 
 
+pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
 
 
