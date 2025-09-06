@@ -1,3 +1,60 @@
+(base) jovyan@unzip-workspace-0-10:~$ mv work/vv.py /mnt/nfs/nina/nina/
+(base) jovyan@unzip-workspace-0-10:~$ cd /mnt/nfs/nina/nina/
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ python vv.py
+Traceback (most recent call last):
+  File "/mnt/nfs/nina/nina/vv.py", line 6, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ rm /mnt/nfs/nina/nina/vv.py
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ python vv.py
+Traceback (most recent call last):
+  File "/mnt/nfs/nina/nina/vv.py", line 6, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ nvcc --version
+bash: nvcc: command not found
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ nvidia-smi
+Sat Sep  6 13:30:07 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40                     On  |   00000000:1C:00.0 Off |                    0 |
+| N/A   27C    P8             35W /  300W |       5MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+(base) jovyan@unzip-workspace-0-10:/mnt/nfs/nina/nina$ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # how-to-mask2former
 
 (base) nina@DESKTOP-QF7UBMR:/mnt/c/Users/USER/Desktop$ conda activate mask2former
