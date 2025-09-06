@@ -43,6 +43,7 @@ python demo/demo.py \
 cp ~/Mask2Former/demo_inputs/output_panoptic_gpu.png /mnt/c/Users/USER/Desktop/output_panoptic_gpu.png
 <img width="942" height="537" alt="螢幕擷取畫面 2025-09-03 152404" src="https://github.com/user-attachments/assets/abebd819-c5d2-4a24-89be-97bc60fed4e2" />
 
+python demo/demo.py --config-file configs/coco/panoptic-segmentation/swin/maskformer2_swin_large_IN21k_384_bs16_100ep.yaml --input demo_inputs/input.jpg --output demo_inputs/output_panoptic_gpu.png --opts MODEL.DEVICE cuda MODEL.WEIGHTS https://dl.fbaipublicfiles.com/maskformer/mask2former/coco/panoptic/maskformer2_swin_large_IN21k_384_bs16_100ep/model_final_f07440.pkl
 
 
 # 基本训练（Wide ResNet-50）
